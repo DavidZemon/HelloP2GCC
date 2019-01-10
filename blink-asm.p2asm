@@ -1,0 +1,5 @@
+dat	org
+	hubset 	#0		'use RCFAST
+blink	waitx	##10_000_000	'delay 0.5 sec (at RCFAST)
+	drvnot	#58		'flip output P58
+	jmp	#blink		'loop

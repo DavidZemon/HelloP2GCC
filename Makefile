@@ -8,7 +8,12 @@ run-%: %.bin
 %.bin: %.c
 	@echo --- COMPILING $< ---
 	bash p2gcc -v -o $@ $<
-	@rm $*.o
+	@rm $$(echo $* | cut -d. -f1).o
+
+%.bin: %.p2asm
+	@echo --- Assembling $< ---
+	p2asm -c $<
+	@rm $$(echo $* | cut -d. -f1).lst
 
 clean:
 	rm -f *.bin
