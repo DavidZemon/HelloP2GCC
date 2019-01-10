@@ -15,27 +15,27 @@ static errot_t set_clock_mode (const bool enablePll, uint32_t inputDivider, uint
         configuration = 1 << 24;
     }
 
-    if (64 > inputDivider) {
+    if (64 >= inputDivider) {
+        --inputDivider;
         inputDivider &= 0b11111;
         configuration |= inputDivider << 18;
     } else {
         return INVALID_INPUT_DIVIDER;
     }
 
-    if (1024 > vcoMultiplier) {
+    if (1024 >= vcoMultiplier) {
+        --vcoMultiplier;
         vcoMultiplier &= 0b1111111111;
         configuration |= vcoMultiplier << 8;
     } else {
         return INVALID_VCO_MULTIPLIER;
     }
 
-    if (30 < finalDivider || finalDivider % 2)
+    if ((finalDivider % 2 && 1 != finalDivider) || 30 < finalDivider) {
         return INVALID_FINAL_DIVIDER;
-    else if (finalDivider) {
-        finalDivider = (finalDivider >> 1) - 1;
-        configuration |= finalDivider << 4;
     } else {
-        configuration |= 0b1111 << 4;
+        finalDivider = (finalDivider >> 1) + 15;
+        configuration |= (finalDivider & 0b1111) << 4;
     }
 
     configuration |= xiStatus << 2;
@@ -44,11 +44,13 @@ static errot_t set_clock_mode (const bool enablePll, uint32_t inputDivider, uint
     __asm__ __volatile("hubset %[_configuration]" : :[_configuration] "r"(configuration));
 
     // wait ~10ms for crystal+PLL to stabilize
-    waitx(200000);
+    waitx(RCFAST_FREQ / 100);
 
     // now switch to PLL
     configuration |= clockSource;
     __asm__ __volatile("hubset %[_configuration]" : :[_configuration] "r"(configuration));
+
+    return NO_ERROR;
 }
 
 errot_t set_clock_pll (uint32_t inputDivider, uint32_t vcoMultiplier, uint32_t finalDivider) {
@@ -57,7 +59,7 @@ errot_t set_clock_pll (uint32_t inputDivider, uint32_t vcoMultiplier, uint32_t f
 
 uint32_t compute_clock (const uint32_t xi, const uint32_t inputDivider, const uint32_t vcoMultiplier,
                         const uint32_t finalDivider) {
-    const uint32_t frequency =  xi * vcoMultiplier / inputDivider;
+    const uint32_t frequency = xi * vcoMultiplier / inputDivider;
     if (finalDivider) {
         return frequency / finalDivider;
     } else {

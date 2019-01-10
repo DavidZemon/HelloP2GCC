@@ -7,6 +7,8 @@ void waitx (const uint32_t clockCycles);
 
 /* HUB Configuration */
 
+#define RCFAST_FREQ 22600000
+
 typedef enum {
     XI_IGNORED,
     XI_NO_LOADING_CAPS,
@@ -53,7 +55,7 @@ void reboot ();
 
 /* Pin I/O functions */
 
-#define io_asm(instruction, pinNumber) __asm__ __volatile__ (#instruction " #" #pinNumber : :)
+#define io_asm(instruction, pinNumber) __asm__ __volatile__ (#instruction " #" #pinNumber)
 
 void direction_input (const uint_fast8_t pinNumber);
 

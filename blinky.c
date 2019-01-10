@@ -3,9 +3,9 @@
 #include <stdio.h>
 
 static const uint32_t XI             = 20000000;
-static const uint32_t INPUT_DIVIDER  = 4;
-static const uint32_t VCO_MULTIPLIER = 72;
-static const uint32_t FINAL_DIVIDER  = 2;
+static const uint32_t INPUT_DIVIDER  = 16;
+static const uint32_t VCO_MULTIPLIER = 144;
+static const uint32_t FINAL_DIVIDER  = 1;
 
 void main () {
     int            i;
@@ -17,13 +17,28 @@ void main () {
 
     const errot_t err = set_clock_pll(INPUT_DIVIDER, VCO_MULTIPLIER, FINAL_DIVIDER);
 
-    if (err)
+    if (err) {
         printf("Error! %d\n", err);
-    else
+        set_clock_rcfast();
+        while(1) {
+            switch (err) {
+                case INVALID_INPUT_DIVIDER:
+                    drive_invert(59);
+                    break;
+                case INVALID_VCO_MULTIPLIER:
+                    drive_invert(60);
+                    break;
+                case INVALID_FINAL_DIVIDER:
+                    drive_invert(61);
+                    break;
+            }
+            waitx(RCFAST_FREQ / 20);
+        }
+    } else
         printf("Running at %d\n", CLOCK_FREQ);
 
     while (1) {
         drive_invert(58);
-        waitx(CLOCK_FREQ / 2);
+        waitx(CLOCK_FREQ / 20);
     }
 }
