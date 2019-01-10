@@ -5,10 +5,10 @@ run-%: %.bin
 	@echo --- LOADING $< ---
 	loadp2 -v -t -p /dev/ttyUSB0 -m 010c1f08 $<
 
-%.bin: %.c
+%.bin: %.c common.c common.h
 	@echo --- COMPILING $< ---
-	bash p2gcc -v -o $@ $<
-	@rm $$(echo $* | cut -d. -f1).o
+	bash -c "p2gcc -k -v -o $@ $< common.c"
+	@rm $$(echo $* | cut -d. -f1).o common.o
 
 %.bin: %.p2asm
 	@echo --- Assembling $< ---
@@ -16,7 +16,7 @@ run-%: %.bin
 	@rm $$(echo $* | cut -d. -f1).lst
 
 clean:
-	rm -f *.bin
+	rm -f *.bin *.lst *.s *.spin2
 
 help:
 	@ls -1a *.c | sed 's/^/run-/g' | sed 's/\.c//g'

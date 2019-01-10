@@ -1,3 +1,4 @@
+#include "common.h"
 #include <stdio.h>
 #include <propeller.h>
 
@@ -8,6 +9,7 @@ void main(void)
     for (i = 1; i <= 10; i++)
     {
         waitcnt(CNT+12000000);
+        waitx(18000000);
         printf("Hello World - %d\n", i);
     }
     printf("Goodbye\n");
