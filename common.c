@@ -59,12 +59,7 @@ errot_t set_clock_pll (uint32_t inputDivider, uint32_t vcoMultiplier, uint32_t f
 
 uint32_t compute_clock (const uint32_t xi, const uint32_t inputDivider, const uint32_t vcoMultiplier,
                         const uint32_t finalDivider) {
-    const uint32_t frequency = xi * vcoMultiplier / inputDivider;
-    if (finalDivider) {
-        return frequency / finalDivider;
-    } else {
-        return frequency;
-    }
+    return xi * vcoMultiplier / inputDivider / finalDivider;
 }
 
 void set_clock_rcfast () {
