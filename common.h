@@ -1,6 +1,44 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/* COG Registers */
+
+typedef enum {
+    REG_ADDR_IJMP3 = 0x1F0,
+    REG_ADDR_IRET3,
+    REG_ADDR_IJMP2,
+    REG_ADDR_IRET2,
+    REG_ADDR_IJMP1,
+    REG_ADDR_IRET1,
+    REG_ADDR_PA,
+    REG_ADDR_PB,
+    REG_ADDR_PTRA,
+    REG_ADDR_PTRB,
+    REG_ADDR_DIRA,
+    REG_ADDR_DIRB,
+    REG_ADDR_OUTA,
+    REG_ADDR_OUTB,
+    REG_ADDR_INA,
+    REG_ADDR_INB
+} cog_register_addr_t;
+
+static volatile uint32_t * const IJMP3 = (volatile uint32_t * const) REG_ADDR_IJMP3;
+static volatile uint32_t * const IRET3 = (volatile uint32_t * const) REG_ADDR_IRET3;
+static volatile uint32_t * const IJMP2 = (volatile uint32_t * const) REG_ADDR_IJMP2;
+static volatile uint32_t * const IRET2 = (volatile uint32_t * const) REG_ADDR_IRET2;
+static volatile uint32_t * const IJMP1 = (volatile uint32_t * const) REG_ADDR_IJMP1;
+static volatile uint32_t * const IRET1 = (volatile uint32_t * const) REG_ADDR_IRET1;
+static volatile uint32_t * const PA = (volatile uint32_t * const) REG_ADDR_PA;
+static volatile uint32_t * const PB = (volatile uint32_t * const) REG_ADDR_PB;
+static volatile uint32_t * const PTRA = (volatile uint32_t * const) REG_ADDR_PTRA;
+static volatile uint32_t * const PTRB = (volatile uint32_t * const) REG_ADDR_PTRB;
+static volatile uint32_t * const DIRA = (volatile uint32_t * const) REG_ADDR_DIRA;
+static volatile uint32_t * const DIRB = (volatile uint32_t * const) REG_ADDR_DIRB;
+static volatile uint32_t * const OUTA = (volatile uint32_t * const) REG_ADDR_OUTA;
+static volatile uint32_t * const OUTB = (volatile uint32_t * const) REG_ADDR_OUTB;
+static volatile uint32_t * const INA = (volatile uint32_t * const) REG_ADDR_INA;
+static volatile uint32_t * const INB = (volatile uint32_t * const) REG_ADDR_INB;
+
 /* Sleep functions */
 
 static inline void waitx (const uint32_t clockCycles) {
@@ -233,6 +271,8 @@ typedef void (*isr_t) (void);
 #define interrupt_resume(isrNumber) __asm__ volatile ("resi" #isrNumber)
 
 #define set_isr(interruptNumber, isr) __asm__ volatile ("mov ijmp" #interruptNumber ", #_" #isr)
+
+#define get_isr(destination, interruptNumber) __asm__ volatile ("mov %0, ijmp" #interruptNumber : "+r" (destination))
 
 #define assign_int_event_src(interruptNumber, interruptSource) \
     __asm__ volatile ("setint" #interruptNumber " %0" : : "I" (interruptSource))

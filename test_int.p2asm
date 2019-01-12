@@ -1,0 +1,24 @@
+CON
+    LOOP_COUNT = 10
+
+dat	org
+    hubset  #0
+
+init
+    mov ijmp1, #my_fancy_isr
+
+blink
+    waitx   ##1_000_000
+    drvnot  #58
+    djnz index, #blink
+
+    trgint1
+    drvnot #57
+    mov index, #LOOP_COUNT
+    jmp     #blink
+
+my_fancy_isr
+    drvnot #56
+    reti1
+
+index   long    LOOP_COUNT
