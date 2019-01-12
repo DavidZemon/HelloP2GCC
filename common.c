@@ -1,12 +1,8 @@
 #include "common.h"
 #include <propeller.h>
 
-void waitx (const uint32_t clockCycles) {
-    __asm__ __volatile ("waitx %0" : : "r" (clockCycles));
-}
-
-static errot_t set_clock_mode (const bool enablePll, uint32_t inputDivider, uint32_t vcoMultiplier,
-                               uint32_t finalDivider, const xi_status_t xiStatus, const clock_source_t clockSource) {
+error_t set_clock_mode (const bool enablePll, uint32_t inputDivider, uint32_t vcoMultiplier, uint32_t finalDivider,
+                        const xi_status_t xiStatus, const clock_source_t clockSource) {
     __asm__ __volatile("hubset #0");
 
     uint32_t configuration = 0;
@@ -53,155 +49,30 @@ static errot_t set_clock_mode (const bool enablePll, uint32_t inputDivider, uint
     return NO_ERROR;
 }
 
-errot_t set_clock_pll (uint32_t inputDivider, uint32_t vcoMultiplier, uint32_t finalDivider) {
-    return set_clock_mode(true, inputDivider, vcoMultiplier, finalDivider, XI_15PF, CLK_SRC_PLL);
+void set_isr (const isr_number_t isrNumber, const isr_t isr) {
+    switch (isrNumber) {
+        case ISR_1:
+            __asm__ volatile ("mov IJMP1, %0" : : "r" (isr));
+            break;
+        case ISR_2:
+            __asm__ volatile ("mov IJMP2, %0" : : "r" (isr));
+            break;
+        case ISR_3:
+            __asm__ volatile ("mov IJMP3, %0" : : "r" (isr));
+            break;
+    }
 }
 
-uint32_t compute_clock (const uint32_t xi, const uint32_t inputDivider, const uint32_t vcoMultiplier,
-                        const uint32_t finalDivider) {
-    return xi * vcoMultiplier / inputDivider / finalDivider;
-}
-
-void set_clock_rcfast () {
-    set_clock_mode(false, 0, 0, 0, XI_IGNORED, CLK_SRC_RC_FAST);
-}
-
-void set_clock_rcslow () {
-    set_clock_mode(false, 0, 0, 0, XI_IGNORED, CLK_SRC_RC_SLOW);
-}
-
-void set_clock_xi (const xi_status_t xiStatus) {
-    set_clock_mode(false, 0, 0, 0, XI_IGNORED, CLK_SRC_XI);
-}
-
-void reboot () {
-    __asm__ __volatile__ ("hubset %0" : : "r" (0x10000000));
-}
-
-void direction_input (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("dirl %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void direction_output (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("dirh %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void direction_c (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("dirc %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void direction_not_c (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("dirnc %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void direction_z (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("dirz %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void direction_not_z (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("dirnz %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void direction_random (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("dirrnd %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void direction_invert (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("dirnot %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void output_low (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("outl %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void output_high (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("outh %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void output_c (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("outc %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void output_not_c (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("outnc %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void output_z (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("outz %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void output_not_z (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("outnz %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void output_random (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("outrnd %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void output_invert (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("outnot %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void float_low (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("fltl %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void float_high (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("flth %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void float_c (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("fltc %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void float_not_c (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("fltnc %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void float_z (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("fltz %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void float_not_z (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("fltnz %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void float_random (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("fltrnd %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void float_invert (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("fltnot %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void drive_low (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("drvl %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void drive_high (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("drvh %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void drive_c (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("drvc %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void drive_not_c (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("drvnc %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void drive_z (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("drvz %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void drive_not_z (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("drvnz %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void drive_random (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("drvrnd %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
-}
-
-void drive_invert (const uint_fast8_t pinNumber) {
-    __asm__ __volatile__ ("drvnot %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
+void set_smartpin_mode (const uint_fast8_t pinNumber, const uint_fast8_t inputSelectorA,
+                        const uint_fast8_t inputSelectorB, const uint_fast8_t inputLogicOrFilter,
+                        const uint_fast16_t lowLevelControl, const uint_fast8_t dirOutControl,
+                        const uint_fast8_t mode) {
+    uint32_t value = 0;
+    value |= (inputSelectorA & 0b1111) << 28;
+    value |= (inputSelectorB & 0b1111) << 24;
+    value |= (inputLogicOrFilter & 0b111) << 21;
+    value |= (lowLevelControl & 0b1111111111111) << 7;
+    value |= (dirOutControl & 0b11) << 5;
+    value |= (mode & 0b1111) << 1;
+    __asm__ volatile ("wrpin %0, %1" : : "r" (pinNumber), "r" (value));
 }
