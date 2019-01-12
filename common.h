@@ -270,7 +270,7 @@ typedef void (*isr_t) (void);
 
 #define interrupt_resume(isrNumber) __asm__ volatile ("resi" #isrNumber)
 
-#define set_isr(interruptNumber, isr) __asm__ volatile ("mov ijmp" #interruptNumber ", #_" #isr)
+#define set_isr(interruptNumber, isr) __asm__ volatile ("mov ijmp" #interruptNumber ", ##_" #isr)
 
 #define get_isr(destination, interruptNumber) __asm__ volatile ("mov %0, ijmp" #interruptNumber : "+r" (destination))
 
