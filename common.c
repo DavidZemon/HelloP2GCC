@@ -49,20 +49,6 @@ error_t set_clock_mode (const bool enablePll, uint32_t inputDivider, uint32_t vc
     return NO_ERROR;
 }
 
-void set_isr (const isr_number_t isrNumber, const isr_t isr) {
-    switch (isrNumber) {
-        case ISR_1:
-            __asm__ volatile ("mov IJMP1, %0" : : "r" (isr));
-            break;
-        case ISR_2:
-            __asm__ volatile ("mov IJMP2, %0" : : "r" (isr));
-            break;
-        case ISR_3:
-            __asm__ volatile ("mov IJMP3, %0" : : "r" (isr));
-            break;
-    }
-}
-
 void set_smartpin_mode (const uint_fast8_t pinNumber, const uint_fast8_t inputSelectorA,
                         const uint_fast8_t inputSelectorB, const uint_fast8_t inputLogicOrFilter,
                         const uint_fast16_t lowLevelControl, const uint_fast8_t dirOutControl,

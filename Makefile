@@ -16,7 +16,7 @@ run-%: %.bin
 	@rm $$(echo $* | cut -d. -f1).lst
 
 clean:
-	rm -f *.bin *.lst *.s *.spin2
+	rm -f *.bin *.lst *.s *.spin2 *.o
 
 help:
 	@ls -1a *.c | sed 's/^/run-/g' | sed 's/\.c//g'

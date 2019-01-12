@@ -206,14 +206,38 @@ static inline void drive_invert (const uint_fast8_t pinNumber) {
 /* Interrupt Configuration */
 
 typedef enum {
-    ISR_1,
-    ISR_2,
-    ISR_3
-} isr_number_t;
+    EVT_SRC_OFF,
+    EVT_SRC_CT_PASSED_CT1,
+    EVT_SRC_CT_PASSED_CT2,
+    EVT_SRC_CT_PASSED_CT3,
+    EVT_SRC_SE1,
+    EVT_SRC_SE2,
+    EVT_SRC_SE3,
+    EVT_SRC_SE4,
+    EVT_SRC_PIN_PATTERN,
+    EVT_SRC_HUB_FIFO_WRAP_RELOAD,
+    EVT_SRC_STREAMER_READY,
+    EVT_SRC_STREAMER_OUT,
+    EVT_SRC_STREAMER_NCO_ROLL,
+    EVT_SRC_STREAMER_READ_1FF,
+    EVT_SRC_ATN_REQ,
+    EVT_SRC_CORDIC
+} event_source_t;
 
 typedef void (*isr_t) (void);
 
-void set_isr (const isr_number_t isrNumber, const isr_t isr);
+#define ISR(name) __attribute__ ((naked)) void name (void)
+
+#define interrupt_return(isrNumber) __asm__ volatile ("reti" #isrNumber)
+
+#define interrupt_resume(isrNumber) __asm__ volatile ("resi" #isrNumber)
+
+#define set_isr(interruptNumber, isr) __asm__ volatile ("mov ijmp" #interruptNumber ", #_" #isr)
+
+#define assign_int_event_src(interruptNumber, interruptSource) \
+    __asm__ volatile ("setint" #interruptNumber " %0" : : "I" (interruptSource))
+
+#define trigger_interrupt(isrNumber) __asm__ volatile ("trgint" #isrNumber)
 
 /* Smart Pin Functions */
 

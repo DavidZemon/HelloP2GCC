@@ -10,7 +10,7 @@ uint32_t              CLOCK_FREQ;
 
 void do_magic ();
 
-__attribute__ ((naked)) void my_fancy_isr (void);
+ISR(my_fancy_isr);
 
 void main () {
     int i;
@@ -27,18 +27,24 @@ void main () {
     } else {
         printf("Running at %d Hz\n", CLOCK_FREQ);
 
-        set_isr(ISR_1, &my_fancy_isr);
+        set_isr(1, my_fancy_isr);
+        assign_int_event_src(1, EVT_SRC_SE1);
         do_magic();
     }
 }
 
 void do_magic () {
+    int32_t i;
     while (1) {
-        drive_invert(58);
-        waitx(CLOCK_FREQ / 20);
+        for (i = 0; i < 20; ++i) {
+            drive_invert(58);
+            waitx(CLOCK_FREQ / 20);
+        }
+        trigger_interrupt(1);
     }
 }
 
-__attribute__ ((naked)) void my_fancy_isr (void) {
-    drive_invert(58);
+ISR(my_fancy_isr) {
+    io_asm(drvnot, 57);
+    interrupt_return(1);
 }
