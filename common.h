@@ -1,5 +1,9 @@
+#pragma once
+
 #include <stdint.h>
 #include <stdbool.h>
+
+extern uint32_t CLOCK_FREQ;
 
 /* COG Registers */
 
@@ -20,7 +24,7 @@ typedef enum {
     REG_ADDR_OUTB,
     REG_ADDR_INA,
     REG_ADDR_INB
-} cog_register_addr_t;
+}               cog_register_addr_t;
 
 static volatile uint32_t *const IJMP3 = (volatile uint32_t *const) REG_ADDR_IJMP3;
 static volatile uint32_t *const IRET3 = (volatile uint32_t *const) REG_ADDR_IRET3;
@@ -39,11 +43,23 @@ static volatile uint32_t *const OUTB  = (volatile uint32_t *const) REG_ADDR_OUTB
 static volatile uint32_t *const INA   = (volatile uint32_t *const) REG_ADDR_INA;
 static volatile uint32_t *const INB   = (volatile uint32_t *const) REG_ADDR_INB;
 
-/* Sleep functions */
+/* Timing and Sleep functions */
+
+#define getct(destination) __asm__ volatile("getct %0" : "+r" (destination))
+
+#define addct(counterEventNumber, d, s) __asm__ volatile("addct" #counterEventNumber " %0, %1" : "+r" (d) : "r" (s))
 
 static inline void waitx (const uint32_t clockCycles) {
     __asm__ __volatile ("waitx %0" : : "r" (clockCycles));
 }
+
+void interruptable_wait (uint32_t clocks);
+
+void interruptable_wait1 (const uint32_t clocks);
+
+void interruptable_wait2 (const uint32_t clocks);
+
+void interruptable_wait3 (const uint32_t clocks);
 
 /* HUB Configuration */
 
@@ -245,7 +261,20 @@ static inline void drive_invert (const uint_fast8_t pinNumber) {
     __asm__ volatile ("drvnot %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
 }
 
-/* Interrupt Configuration */
+/* Event & Interrupt Configuration */
+
+typedef enum {
+    INT_1 = 1,
+    INT_2,
+    INT_3
+}                        interrupt_number_t;
+
+typedef enum {
+    SEL_EVT_1 = 1,
+    SEL_EVT_2,
+    SEL_EVT_3,
+    SEL_EVT_4
+}                        sel_evt_number_t;
 
 typedef enum {
     EVT_SRC_OFF,
@@ -266,15 +295,30 @@ typedef enum {
     EVT_SRC_CORDIC
 }                        event_source_t;
 
+typedef enum {
+    SESP_COG_READ_LUT       = 0b000000000,
+    SESP_COG_WRITE_LUT      = 0b000000100,
+    SESP_COMP_COG_READ_LUT  = 0b000001000,
+    SESP_COMP_COG_WRITE_LUT = 0b000001100,
+    SESP_LOCK_RISES         = 0b000010000,
+    SESP_LOCK_FALLS         = 0b000100000,
+    SESP_LOCK_CHANGES       = 0b000110000,
+    SESP_IN_RISES           = 0b001000000,
+    SESP_IN_FALLS           = 0b010000000,
+    SESP_IN_CHANGES         = 0b011000000,
+    SESP_IN_LOW             = 0b100000000,
+    SESP_IN_HIGH            = 0b110000000,
+}                        sel_evt_src_prefix_t;
+
 typedef void (*isr_t) (void);
 
-#define ISR(name) __attribute__ ((naked)) void name (void)
+#define ISR(name) __attribute__ ((naked)) void isr_ ## name (void)
 
 #define interrupt_return(isrNumber) __asm__ volatile ("reti" #isrNumber)
 
 #define interrupt_resume(isrNumber) __asm__ volatile ("resi" #isrNumber)
 
-#define set_isr(interruptNumber, isr) __asm__ volatile ("mov ijmp" #interruptNumber ", ##_" #isr)
+#define set_isr(interruptNumber, isr) __asm__ volatile ("mov ijmp" #interruptNumber ", ##_isr_" #isr)
 
 #define get_isr(destination, interruptNumber) __asm__ volatile ("mov %0, ijmp" #interruptNumber : "+r" (destination))
 
@@ -282,6 +326,9 @@ typedef void (*isr_t) (void);
     __asm__ volatile ("setint" #interruptNumber " %0" : : "I" (interruptSource))
 
 #define trigger_interrupt(isrNumber) __asm__ volatile ("trgint" #isrNumber)
+
+#define push_frame() __asm__ volatile ("call #__PUSH_FRAME")
+#define pop_frame() __asm__ volatile ("call #__POP_FRAME")
 
 /* Smart Pin Functions */
 
@@ -306,20 +353,27 @@ typedef enum {
     SPM_SYNC_SERIAL_RX = 0b11101,
     SPM_ASYNC_SERIAL_TX,
     SPM_ASYNC_SERIAL_RX,
-} smartpin_mode_t;
+}            smartpin_mode_t;
 
 typedef union {
     struct {
-        unsigned int :1;
-        unsigned int mode:4;
-        unsigned int tt:2;
-        unsigned int lowLevelControl:13;
-        unsigned int filter:3;
-        unsigned int inputSelectorB:4;
-        unsigned int inputSelectorA:4;
+        unsigned int
+                :1;
+        unsigned int mode
+                             :5;
+        unsigned int tt
+                             :2;
+        unsigned int lowLevelControl
+                             :13;
+        unsigned int filter
+                             :3;
+        unsigned int inputSelectorB
+                             :4;
+        unsigned int inputSelectorA
+                             :4;
     } __attribute__ ((packed)) fields;
-    uint32_t raw;
-} smartpin_control_t;
+    uint32_t                   raw;
+}            smartpin_control_t;
 
 static inline void set_smartpin_mode (const uint_fast8_t pinNumber, const smartpin_control_t mode) {
     __asm__ volatile ("wrpin %0, %1" : : "r" (mode.raw), "r" (pinNumber));

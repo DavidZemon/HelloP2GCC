@@ -5,9 +5,9 @@ run-%: %.bin
 	@echo --- LOADING $< ---
 	loadp2 -v -t -p /dev/ttyUSB0 -m 010c1f08 $<
 
-%.bin: %.c common.c common.h
+%.bin: %.c common.c common.h uart.c uart.h $(P2GCC_LIBDIR)/prefix.spin2
 	@echo --- COMPILING $< ---
-	bash -c "p2gcc -k -v -o $@ $< common.c"
+	bash -c "p2gcc -k -v -o $@ $< common.c uart.c"
 	@rm $$(echo $* | cut -d. -f1).o common.o
 
 %.bin: %.p2asm
