@@ -48,17 +48,3 @@ error_t set_clock_mode (const bool enablePll, uint32_t inputDivider, uint32_t vc
 
     return NO_ERROR;
 }
-
-void set_smartpin_mode (const uint_fast8_t pinNumber, const uint_fast8_t inputSelectorA,
-                        const uint_fast8_t inputSelectorB, const uint_fast8_t inputLogicOrFilter,
-                        const uint_fast16_t lowLevelControl, const uint_fast8_t dirOutControl,
-                        const uint_fast8_t mode) {
-    uint32_t value = 0;
-    value |= (inputSelectorA & 0b1111) << 28;
-    value |= (inputSelectorB & 0b1111) << 24;
-    value |= (inputLogicOrFilter & 0b111) << 21;
-    value |= (lowLevelControl & 0b1111111111111) << 7;
-    value |= (dirOutControl & 0b11) << 5;
-    value |= (mode & 0b1111) << 1;
-    __asm__ volatile ("wrpin %0, %1" : : "r" (pinNumber), "r" (value));
-}

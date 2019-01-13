@@ -1,11 +1,20 @@
 CON
     LOOP_COUNT = 10
+    PERIOD = 65535
+    UINT_MAX = 4294967295
+    MODE = $2A ' tt=01 and mmmmm = 00101
 
 dat	org
     hubset  #0
 
 init
     mov ijmp1, #my_fancy_isr
+
+    dirl #59
+    wrpin mode, #59
+    wxpin period, #59
+    wypin uintMax, #59
+    dirh #59
 
 blink
     waitx   ##1_000_000
@@ -15,10 +24,13 @@ blink
     trgint1
     drvnot #57
     mov index, #LOOP_COUNT
-    jmp     #blink
+    jmp #blink
 
 my_fancy_isr
     drvnot #56
     reti1
 
 index   long    LOOP_COUNT
+period  long    PERIOD
+uintMax long    UINT_MAX
+mode    long    MODE

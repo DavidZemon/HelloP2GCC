@@ -41,6 +41,16 @@ void main () {
         printf("Running at %d Hz\n", CLOCK_FREQ);
         set_isr(1, my_fancy_isr);
 
+        direction_low(59);
+        smartpin_control_t mode;
+        mode.fields.mode = SPM_TRANSITION_OUTPUT;
+        mode.fields.tt = 0b01;
+        printf("Setting smart pin mode to 0x%08x\n", mode.raw);
+        set_smartpin_mode(59, mode);
+        set_smartpin_x_reg(59, UINT16_MAX);
+        set_smartpin_y_reg(59, -1);
+        direction_high(59);
+
         do_magic();
     }
 }

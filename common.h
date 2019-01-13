@@ -22,22 +22,22 @@ typedef enum {
     REG_ADDR_INB
 } cog_register_addr_t;
 
-static volatile uint32_t * const IJMP3 = (volatile uint32_t * const) REG_ADDR_IJMP3;
-static volatile uint32_t * const IRET3 = (volatile uint32_t * const) REG_ADDR_IRET3;
-static volatile uint32_t * const IJMP2 = (volatile uint32_t * const) REG_ADDR_IJMP2;
-static volatile uint32_t * const IRET2 = (volatile uint32_t * const) REG_ADDR_IRET2;
-static volatile uint32_t * const IJMP1 = (volatile uint32_t * const) REG_ADDR_IJMP1;
-static volatile uint32_t * const IRET1 = (volatile uint32_t * const) REG_ADDR_IRET1;
-static volatile uint32_t * const PA = (volatile uint32_t * const) REG_ADDR_PA;
-static volatile uint32_t * const PB = (volatile uint32_t * const) REG_ADDR_PB;
-static volatile uint32_t * const PTRA = (volatile uint32_t * const) REG_ADDR_PTRA;
-static volatile uint32_t * const PTRB = (volatile uint32_t * const) REG_ADDR_PTRB;
-static volatile uint32_t * const DIRA = (volatile uint32_t * const) REG_ADDR_DIRA;
-static volatile uint32_t * const DIRB = (volatile uint32_t * const) REG_ADDR_DIRB;
-static volatile uint32_t * const OUTA = (volatile uint32_t * const) REG_ADDR_OUTA;
-static volatile uint32_t * const OUTB = (volatile uint32_t * const) REG_ADDR_OUTB;
-static volatile uint32_t * const INA = (volatile uint32_t * const) REG_ADDR_INA;
-static volatile uint32_t * const INB = (volatile uint32_t * const) REG_ADDR_INB;
+static volatile uint32_t *const IJMP3 = (volatile uint32_t *const) REG_ADDR_IJMP3;
+static volatile uint32_t *const IRET3 = (volatile uint32_t *const) REG_ADDR_IRET3;
+static volatile uint32_t *const IJMP2 = (volatile uint32_t *const) REG_ADDR_IJMP2;
+static volatile uint32_t *const IRET2 = (volatile uint32_t *const) REG_ADDR_IRET2;
+static volatile uint32_t *const IJMP1 = (volatile uint32_t *const) REG_ADDR_IJMP1;
+static volatile uint32_t *const IRET1 = (volatile uint32_t *const) REG_ADDR_IRET1;
+static volatile uint32_t *const PA    = (volatile uint32_t *const) REG_ADDR_PA;
+static volatile uint32_t *const PB    = (volatile uint32_t *const) REG_ADDR_PB;
+static volatile uint32_t *const PTRA  = (volatile uint32_t *const) REG_ADDR_PTRA;
+static volatile uint32_t *const PTRB  = (volatile uint32_t *const) REG_ADDR_PTRB;
+static volatile uint32_t *const DIRA  = (volatile uint32_t *const) REG_ADDR_DIRA;
+static volatile uint32_t *const DIRB  = (volatile uint32_t *const) REG_ADDR_DIRB;
+static volatile uint32_t *const OUTA  = (volatile uint32_t *const) REG_ADDR_OUTA;
+static volatile uint32_t *const OUTB  = (volatile uint32_t *const) REG_ADDR_OUTB;
+static volatile uint32_t *const INA   = (volatile uint32_t *const) REG_ADDR_INA;
+static volatile uint32_t *const INB   = (volatile uint32_t *const) REG_ADDR_INB;
 
 /* Sleep functions */
 
@@ -54,21 +54,21 @@ typedef enum {
     XI_NO_LOADING_CAPS,
     XI_15PF,
     XI_30PF
-} xi_status_t;
+}                        xi_status_t;
 
 typedef enum {
     CLK_SRC_RC_FAST,
     CLK_SRC_RC_SLOW,
     CLK_SRC_XI,
     CLK_SRC_PLL
-} clock_source_t;
+}                        clock_source_t;
 
 typedef enum {
     NO_ERROR,
     INVALID_INPUT_DIVIDER,
     INVALID_VCO_MULTIPLIER,
     INVALID_FINAL_DIVIDER
-} error_t;
+}                        error_t;
 
 error_t set_clock_mode (const bool enablePll, uint32_t inputDivider, uint32_t vcoMultiplier, uint32_t finalDivider,
                         const xi_status_t xiStatus, const clock_source_t clockSource);
@@ -117,9 +117,13 @@ static inline void direction_input (const uint_fast8_t pinNumber) {
     __asm__ volatile ("dirl %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
 }
 
+#define direction_low direction_input
+
 static inline void direction_output (const uint_fast8_t pinNumber) {
     __asm__ volatile ("dirh %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
 }
+
+#define direction_high direction_output
 
 static inline void direction_c (const uint_fast8_t pinNumber) {
     __asm__ volatile ("dirc %[_pinNumber]" : :[_pinNumber] "r"(pinNumber));
@@ -260,7 +264,7 @@ typedef enum {
     EVT_SRC_STREAMER_READ_1FF,
     EVT_SRC_ATN_REQ,
     EVT_SRC_CORDIC
-} event_source_t;
+}                        event_source_t;
 
 typedef void (*isr_t) (void);
 
@@ -281,14 +285,52 @@ typedef void (*isr_t) (void);
 
 /* Smart Pin Functions */
 
-void set_smartpin_raw_mode (const uint_fast8_t pinNumber, const uint32_t mode);
+typedef enum {
+    SPM_OFF,
+    SPM_DAC_NOISE,
+    SPM_DAC_PRNG_DITHER,
+    SPM_DAC_PWM_DITHER,
+    SPM_PULSE_CYCLE_OUTPUT,
+    SPM_TRANSITION_OUTPUT,
+    SPM_NCO_FREQUENCY,
+    SPM_NCO_DUTY,
+    SPM_PWM_TRIAGLE,
+    SPM_PWM_SAWTOOTH,
+    SPM_PWM_SWITCH_MODE_PWR,
+    SPM_QUAD_ENCODER,
+    SPM_WTF1,
+    SPM_WTF2,
+    SPM_TIME_A_STATES  = 0b10000,
+    SPM_TIME_A_HIGH_STATES,
+    SPM_TIME_X_A,
+    SPM_SYNC_SERIAL_RX = 0b11101,
+    SPM_ASYNC_SERIAL_TX,
+    SPM_ASYNC_SERIAL_RX,
+} smartpin_mode_t;
+
+typedef union {
+    struct {
+        unsigned int :1;
+        unsigned int mode:4;
+        unsigned int tt:2;
+        unsigned int lowLevelControl:13;
+        unsigned int filter:3;
+        unsigned int inputSelectorB:4;
+        unsigned int inputSelectorA:4;
+    } __attribute__ ((packed)) fields;
+    uint32_t raw;
+} smartpin_control_t;
+
+static inline void set_smartpin_mode (const uint_fast8_t pinNumber, const smartpin_control_t mode) {
+    __asm__ volatile ("wrpin %0, %1" : : "r" (mode.raw), "r" (pinNumber));
+}
 
 static inline void set_smartpin_x_reg (const uint_fast8_t pinNumber, const uint32_t value) {
-    __asm__ volatile ("wxpin %0, %1" : : "r"(pinNumber), "r"(value));
+    __asm__ volatile ("wxpin %0, %1" : : "r"(value), "r"(pinNumber));
 }
 
 static inline void set_smartpin_y_reg (const uint_fast8_t pinNumber, const uint32_t value) {
-    __asm__ volatile ("wypin %0, %1" : : "r"(pinNumber), "r"(value));
+    __asm__ volatile ("wypin %0, %1" : : "r"(value), "r"(pinNumber));
 }
 
 static inline uint32_t read_smartpin (const uint_fast8_t pinNumber) {
