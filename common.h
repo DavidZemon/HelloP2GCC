@@ -49,6 +49,8 @@ static volatile uint32_t *const INB   = (volatile uint32_t *const) REG_ADDR_INB;
 
 #define addct(counterEventNumber, d, s) __asm__ volatile("addct" #counterEventNumber " %0, %1" : "+r" (d) : "r" (s))
 
+#define nop() __asm__ volatile("nop")
+
 static inline void waitx (const uint32_t clockCycles) {
     __asm__ __volatile ("waitx %0" : : "r" (clockCycles));
 }
@@ -328,6 +330,7 @@ typedef void (*isr_t) (void);
 #define trigger_interrupt(isrNumber) __asm__ volatile ("trgint" #isrNumber)
 
 #define push_frame() __asm__ volatile ("call #__PUSH_FRAME")
+
 #define pop_frame() __asm__ volatile ("call #__POP_FRAME")
 
 /* Smart Pin Functions */

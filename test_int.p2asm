@@ -1,16 +1,230 @@
-dat	org
+con
+	rx_pin = 63
+	tx_pin = 62
+	clock_freq = 80_000_000
+	baud_rate = 115_200
+	lr = $1f6
+	init_stack_ptr = 32*1024 - 32*4
+	PERIOD = 1_000_000
+
+dat org
+start
+    call	#prefix_setup
+	calld	lr, main_address
+	cogid	r1
+    mov     r2, #0
+    wrlong  r2, r2
+	cogstop	r1
+main_address
+	long	_main
+
+r0	long	0
+r1	long	0
+r2	long	0
+r3	long	0
+r4	long	0
+r5	long	0
+r6	long	0
+r7	long	0
+r8	long	0
+r9	long	0
+r10	long	0
+r11	long	0
+r12	long	0
+r13	long	0
+r14	long	0
+sp	long	0
+
+temp	long    0
+temp1	long	0
+temp2	long	0
+
+
+__DIVSI	mov	temp, #0
+	abs	r0, r0 wc
+ if_c	mov	temp, #1
+	abs	r1, r1 wc
+ if_c	xor	temp, #1
+	call	#__UDIVSI
+	cmp	temp, #0 wz
+ if_nz	neg	r0, r0
+	ret
+
+'__LONGFILL
+'        wrfast  #0, r0
+'        rep     #1, r2
+'        wflong  r1
+'        ret
+
+__LONGFILL
+        mov     __LONG1, r1
+        shr     __LONG1, #9
+        or      __LONG1, ##$ff800000
+        setd    __LONG2, r1
+        sub     r2, #1
+        setq    r2
+__LONG1 augd    #0
+__LONG2 wrlong  #0, r0
+        ret
+
+__MEMCPY
+        rdbyte  r3, r1
+        wrbyte  r3, r0
+        add     r0, #1
+        add     r1, #1
+        djnz    r2, #__MEMCPY
+        ret
+
+prefix_setup
+	mov	sp, ##init_stack_ptr
+	drvh    #tx_pin
+        nop                           'hubset  #$ff
+	mov	r0, #1
+        qmul    r0, r0
+        getqx   __has_cordic
+	ret
+
+__has_cordic
+	long	0
+
+' Used CORDIC multiply if available
+__MULSI cmp	__has_cordic, #0 wz
+ if_z   jmp	#__MULSI0
+	qmul	r0, r1
+	getqx	r0
+	getqy	r1
+	ret
+' else, do shift and add method
+__MULSI0
+        mov     temp1,#0
+        mov     temp2,#32
+        shr     r0,#1        wc
+__MULSI1
+ if_c   add     temp1,r1     wc
+        rcr     temp1,#1     wc
+        rcr     r0,#1        wc
+        djnz    temp2,#__MULSI1
+        mov     r1, temp1
+        ret
+
+' Used CORDIC divide if available
+__UDIVSI
+	cmp	__has_cordic, #0 wz
+ if_z   jmp	#__UDIVSI0
+	qdiv	r0, r1
+	getqx	r0
+	getqy	r1
+	ret
+' else, do shift and subtract method
+__UDIVSI0
+        mov     temp2,#32
+        mov     temp1,#0
+        cmp     r1, #0       wz
+ if_nz  jmp     #__UDIVSI1
+        mov     r0, #0
+        ret
+__UDIVSI1
+        shr     r1,#1        wcz
+        rcr     temp1,#1
+ if_nz  djnz    temp2,#__UDIVSI1
+__UDIVSI2
+        cmpsub  r0,temp1     wc
+        rcl     r1,#1
+        shr     temp1,#1
+        djnz    temp2,#__UDIVSI2
+        mov     temp1, r1
+	mov	r1, r0
+	mov	r0, temp1
+        ret
+
+
+__PUSH_FRAME
+    mov isr_bak_r0, r0
+    mov isr_bak_r1, r1
+    mov isr_bak_r2, r2
+    mov isr_bak_r3, r3
+    mov isr_bak_r4, r4
+    mov isr_bak_r5, r5
+    mov isr_bak_r6, r6
+    mov isr_bak_r7, r7
+    mov isr_bak_r8, r8
+    mov isr_bak_r9, r9
+    mov isr_bak_r10, r10
+    mov isr_bak_r11, r11
+    mov isr_bak_r12, r12
+    mov isr_bak_r13, r13
+    mov isr_bak_r14, r14
+    mov isr_bak_sp, sp
+    mov isr_bak_temp, temp
+    mov isr_bak_temp1, temp1
+    mov isr_bak_temp2, temp2
+    ret
+
+__POP_FRAME
+    mov r0, isr_bak_r0
+    mov r1, isr_bak_r1
+    mov r2, isr_bak_r2
+    mov r3, isr_bak_r3
+    mov r4, isr_bak_r4
+    mov r5, isr_bak_r5
+    mov r6, isr_bak_r6
+    mov r7, isr_bak_r7
+    mov r8, isr_bak_r8
+    mov r9, isr_bak_r9
+    mov r10, isr_bak_r10
+    mov r11, isr_bak_r11
+    mov r12, isr_bak_r12
+    mov r13, isr_bak_r13
+    mov r14, isr_bak_r14
+    mov sp, isr_bak_sp
+    mov temp, isr_bak_temp
+    mov temp1, isr_bak_temp1
+    mov temp2, isr_bak_temp2
+    ret
+
+isr_bak_r0	long	0
+isr_bak_r1	long	0
+isr_bak_r2	long	0
+isr_bak_r3	long	0
+isr_bak_r4	long	0
+isr_bak_r5	long	0
+isr_bak_r6	long	0
+isr_bak_r7	long	0
+isr_bak_r8	long	0
+isr_bak_r9	long	0
+isr_bak_r10	long	0
+isr_bak_r11	long	0
+isr_bak_r12	long	0
+isr_bak_r13	long	0
+isr_bak_r14	long	0
+isr_bak_sp	long	0
+
+isr_bak_temp	long    0
+isr_bak_temp1	long	0
+isr_bak_temp2	long	0
+
+
+
+_main
     hubset  #0
 
+    mov ijmp1, ##_isr_my_fancy_isr
     getct timer
 blink:
     drvnot  #58
+    trgint1
 
-    addct1 timer, period
+    addct1 timer, _period
 foo:
     jnct1 #foo:
 
     jmp #blink:
 
-timer       long    0
-period      long    1_000_000
+_isr_my_fancy_isr
+	call #__PUSH_FRAME
+	drvnot #56
+	call #__POP_FRAME
+	reti1
 
+timer       long    0
+_period     long    PERIOD
